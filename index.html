@@ -355,7 +355,6 @@
       fill: currentColor;
     }
 
-    /* レスポンシブ用メディアクエリ */
     @media (max-width: 900px) {
       body {
         height: auto;
@@ -513,6 +512,21 @@
           </div>
         </div>
 
+        <!-- マジックトーム開始位置 -->
+        <div class="stat-item">
+          <div class="stat-label">
+            <span class="stat-icon" title="マジックトームの値">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623032549507142/IMG_3786.png?ex=6ae1f040&is=6ae09ec0&hm=acdda176356531e4400bfe3ddb84361d542d60e131bfeea1fd9fdb27c07afbd4&" alt="マジックトーム開始">
+            </span>
+            マジックトームの値
+          </div>
+          <div class="counter-ctrl">
+            <button class="btn-counter" onclick="changeVal('tomeStart', -1)">-</button>
+            <span class="counter-val" id="val-tomeStart">0</span>
+            <button class="btn-counter" onclick="changeVal('tomeStart', 1)">+</button>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -595,7 +609,6 @@
           <span id="res-cardCount" style="font-size:0.75rem;">使用枚数: 0</span>
         </div>
         <div class="sequence-list" id="res-seqList">
-          <!-- 動的生成エリア -->
         </div>
       </div>
     </section>
@@ -612,6 +625,7 @@
       cardD5: 0,
       cardD6: 0,
       cardOther: 0,
+      tomeStart: 0,
       relics: {
         spray: false,
         arrow: false,
@@ -622,8 +636,15 @@
     };
 
     function changeVal(key, delta) {
-      state[key] = Math.max(0, state[key] + delta);
-      document.getElementById(`val-${key}`).innerText = state[key];
+      if (key === 'tomeStart') {
+        state.tomeStart += delta;
+        if (state.tomeStart > 2) state.tomeStart = 0;
+        if (state.tomeStart < 0) state.tomeStart = 2;
+        document.getElementById(`val-${key}`).innerText = state.tomeStart;
+      } else {
+        state[key] = Math.max(0, state[key] + delta);
+        document.getElementById(`val-${key}`).innerText = state[key];
+      }
       calculateBestSequence();
     }
 
@@ -647,13 +668,14 @@
       state.cardD5 = 0;
       state.cardD6 = 0;
       state.cardOther = 0;
+      state.tomeStart = 0;
 
       for (let k in state.relics) {
         state.relics[k] = false;
         document.getElementById(`relic-${k}`).classList.remove('active');
       }
 
-      const keys = ['initMarks', 'lbInitDmg', 'cardLB', 'cardD3', 'cardD4', 'cardD5', 'cardD6', 'cardOther'];
+      const keys = ['initMarks', 'lbInitDmg', 'cardLB', 'cardD3', 'cardD4', 'cardD5', 'cardD6', 'cardOther', 'tomeStart'];
       keys.forEach(k => {
         document.getElementById(`val-${k}`).innerText = state[k];
       });
@@ -665,16 +687,16 @@
     function calculateBestSequence() {
       let maxUses = 1;
       if (state.relics.bag) maxUses += 1;
-      if (state.relics.shuriken) maxUses += 1; // 手裏剣の初期使用数+1
+      if (state.relics.shuriken) maxUses += 1;
       maxUses = Math.min(9, maxUses);
 
       const deck = [];
       for (let i = 0; i < state.cardLB; i++) deck.push({ type: 'LB', name: 'ライフブック' });
-      for (let i = 0; i < state.cardD3; i++) deck.push({ type: 'D3', name: 'ダメージ3' });
-      for (let i = 0; i < state.cardD4; i++) deck.push({ type: 'D4', name: 'ダメージ4' });
-      for (let i = 0; i < state.cardD5; i++) deck.push({ type: 'D5', name: 'ダメージ5' });
-      for (let i = 0; i < state.cardD6; i++) deck.push({ type: 'D6', name: 'ダメージ6' });
-      for (let i = 0; i < state.cardOther; i++) deck.push({ type: 'OTHER', name: 'その他' });
+      for (let i = 0; i < state.cardD3; i++) deck.push({ type: 'D3', name: '対モンスター用レーザー' });
+      for (let i = 0; i < state.cardD4; i++) deck.push({ type: 'D4', name: '定方向発破' });
+      for (let i = 0; i < state.cardD5; i++) deck.push({ type: 'D5', name: '対モンスター用ブリック' });
+      for (let i = 0; i < state.cardD6; i++) deck.push({ type: 'D6', name: '軌道レールキャノン' });
+      for (let i = 0; i < state.cardOther; i++) deck.push({ type: 'OTHER', name: 'その他効果カード' });
 
       let bestResult = {
         totalDamage: 0,
@@ -711,18 +733,18 @@
 
           const playOrderNumber = cardsPlayedTotal + 1;
           let tomeTriggered = false;
-          if (state.relics.tome && playOrderNumber % 3 === 0) {
-            tomeTriggered = true;
+          if (state.relics.tome) {
+            if ((playOrderNumber + state.tomeStart) % 3 === 0) {
+              tomeTriggered = true;
+            }
           }
 
-          // 1. 魔法の矢袋（優先処理）
           if (isDamageCard && state.relics.arrow && arrowAvailable && currentMarks >= 1) {
             arrowTriggered = true;
             newArrowAvail = false;
             nextMarks += 1; // ダメージ処理前マーク+1
           }
 
-          // ダメージ計算
           let stepDmg = 0;
           if (isDamageCard) {
             let baseDmg = 0;
@@ -737,7 +759,6 @@
             if (state.relics.shuriken) stepDmg += nextMarks;
           }
 
-          // 2. ダメージ後のマーク付与処理
           if (isDamageCard) {
             if (card.type === 'LB') {
               nextMarks += 1;
@@ -747,7 +768,6 @@
             }
           }
 
-          // 3. LB効果
           if (card.type === 'LB') {
             if (currentMarks >= 3) {
               nextUses = Math.min(9, nextUses + 1);
@@ -755,7 +775,6 @@
             nextLbBase += 1;
           }
 
-          // 消費コストの判定
           let consumeCard = true;
           if (arrowTriggered) consumeCard = false;
           else if (tomeTriggered) consumeCard = false;
@@ -836,7 +855,6 @@
       });
     }
 
-    // 初回計算
     calculateBestSequence();
   </script>
 </body>

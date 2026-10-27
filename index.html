@@ -30,24 +30,26 @@
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       background-color: var(--bg-color);
       color: var(--text-main);
-      height: 100vh;
-      overflow: hidden;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
 
     header {
-      padding: 8px 16px;
+      padding: 10px 16px;
       background-color: #0b1120;
       border-bottom: 1px solid var(--card-border);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      height: 48px;
+      min-height: 52px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
     header h1 {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 700;
       color: #e2e8f0;
       display: flex;
@@ -73,10 +75,12 @@
     main {
       flex: 1;
       display: grid;
-      grid-template-columns: 500px 500px 500px ;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 12px;
       padding: 12px;
-      height: calc(100vh - 48px);
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
     }
 
     .panel {
@@ -87,7 +91,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      overflow: hidden;
+      max-height: 100%;
     }
 
     .panel-title {
@@ -107,6 +111,7 @@
       gap: 8px;
       overflow-y: auto;
       padding-right: 4px;
+      max-height: calc(100vh - 120px);
     }
 
     .stat-item {
@@ -114,22 +119,25 @@
       align-items: center;
       justify-content: space-between;
       background: #0f172a;
-      padding: 6px 10px;
+      padding: 8px 10px;
       border-radius: 8px;
       border: 1px solid #1e293b;
+      gap: 8px;
     }
 
     .stat-label {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 1rem;
+      font-size: 0.9rem;
       color: #cbd5e1;
+      flex: 1;
+      min-width: 0;
     }
 
     .stat-icon, .relic-icon {
-      width: 60px;
-      height: 60px;
+      width: 48px;
+      height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -148,11 +156,12 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      flex-shrink: 0;
     }
 
     .btn-counter {
-      width: 60px;
-      height: 60px;
+      width: 42px;
+      height: 42px;
       background: var(--card-border);
       color: #fff;
       border: none;
@@ -162,16 +171,19 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 3rem;
+      font-size: 1.75rem;
       transition: background 0.15s;
     }
     .btn-counter:hover {
       background: var(--accent-color);
     }
+    .btn-counter:active {
+      transform: scale(0.96);
+    }
     .counter-val {
-      width: 24px;
+      width: 28px;
       text-align: center;
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       font-weight: 700;
     }
 
@@ -180,6 +192,7 @@
       flex-direction: column;
       gap: 8px;
       overflow-y: auto;
+      max-height: calc(100vh - 120px);
     }
 
     .relic-card {
@@ -204,22 +217,19 @@
     .relic-card .relic-info {
       display: flex;
       flex-direction: column;
+      flex: 1;
+      min-width: 0;
     }
 
     .relic-card .relic-name {
       font-size: 0.85rem;
       font-weight: 700;
       color: #e2e8f0;
+      word-break: break-word;
     }
 
     .relic-card.active .relic-name {
       color: var(--active-gold);
-    }
-
-    .relic-card .relic-desc {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      line-height: 1.2;
     }
 
     .relic-toggle {
@@ -252,7 +262,7 @@
 
     .result-summary {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, 1fr);
       gap: 10px;
     }
 
@@ -271,7 +281,7 @@
     }
 
     .metric-value {
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       font-weight: 800;
       color: var(--accent-color);
     }
@@ -282,6 +292,7 @@
       flex-direction: column;
       gap: 8px;
       overflow: hidden;
+      min-height: 250px;
     }
 
     .sequence-list {
@@ -291,6 +302,7 @@
       flex-direction: column;
       gap: 6px;
       padding-right: 4px;
+      max-height: calc(100vh - 230px);
     }
 
     .seq-step {
@@ -298,10 +310,11 @@
       align-items: center;
       gap: 8px;
       background: #0f172a;
-      padding: 6px 10px;
+      padding: 8px 10px;
       border-radius: 6px;
       border-left: 3px solid var(--accent-color);
       font-size: 0.82rem;
+      flex-wrap: wrap;
     }
 
     .seq-num {
@@ -310,9 +323,10 @@
       width: 20px;
     }
 
-    .seq-card-name {
+    .seq-cardName {
       font-weight: 700;
       flex: 1;
+      min-width: 110px;
     }
 
     .seq-details {
@@ -323,6 +337,7 @@
     .seq-dmg {
       font-weight: 800;
       color: var(--success);
+      margin-left: auto;
     }
 
     .badge-free {
@@ -338,6 +353,27 @@
       width: 18px;
       height: 18px;
       fill: currentColor;
+    }
+
+    /* レスポンシブ用メディアクエリ */
+    @media (max-width: 900px) {
+      body {
+        height: auto;
+        overflow-y: auto;
+      }
+
+      main {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+      }
+
+      .controls-grid,
+      .relics-grid,
+      .sequence-list {
+        max-height: none;
+        overflow: visible;
+      }
     }
   </style>
 </head>
@@ -361,7 +397,7 @@
         <div class="stat-item">
           <div class="stat-label">
             <span class="stat-icon">
-              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620698280788069/IMG_3780.png?ex=6ae1ee13&is=6ae09c93&hm=3d683532472aebbd9cabd26fdca4c64c3829b243adfbfd69fdc77748b889e457&" alt="マーク" style="width: 60px; height: 60px; object-fit: contain;">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620698280788069/IMG_3780.png?ex=6ae1ee13&is=6ae09c93&hm=3d683532472aebbd9cabd26fdca4c64c3829b243adfbfd69fdc77748b889e457&" alt="マーク">
             </span>
             マーク数
           </div>
@@ -376,7 +412,7 @@
         <div class="stat-item">
           <div class="stat-label">
             <span class="stat-icon" title="ライフブックダメージ">
-              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620697945509929/IMG_3779.png?ex=6ae1ee13&is=6ae09c93&hm=f66c81ef6aaac010cf24705f4a9d3f7645ce97b6179316bc21e482fdb42dfa00&" alt="ライフブック" style="width: 60px; height: 60px; object-fit: contain;">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620697945509929/IMG_3779.png?ex=6ae1ee13&is=6ae09c93&hm=f66c81ef6aaac010cf24705f4a9d3f7645ce97b6179316bc21e482fdb42dfa00&" alt="ライフブック">
             </span>
             ライフブックダメージ
           </div>
@@ -391,7 +427,7 @@
         <div class="stat-item">
           <div class="stat-label">
             <span class="stat-icon">
-              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620697945509929/IMG_3779.png?ex=6ae1ee13&is=6ae09c93&hm=f66c81ef6aaac010cf24705f4a9d3f7645ce97b6179316bc21e482fdb42dfa00&" alt="ライフブック" style="width: 60px; height: 60px; object-fit: contain;">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620697945509929/IMG_3779.png?ex=6ae1ee13&is=6ae09c93&hm=f66c81ef6aaac010cf24705f4a9d3f7645ce97b6179316bc21e482fdb42dfa00&" alt="ライフブック">
             </span>
             ライフブック枚数
           </div>
@@ -406,7 +442,7 @@
         <div class="stat-item">
           <div class="stat-label">
             <span class="stat-icon">
-              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620698981240923/IMG_3782.png?ex=6ae1ee13&is=6ae09c93&hm=9841784b079ca2d44b7cf945a56ef1a7da0e5557cd4baae0e991aa3b5d77c0f1&" alt="対モンスター用レーザー" style="width: 60px; height: 60px; object-fit: contain;">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620698981240923/IMG_3782.png?ex=6ae1ee13&is=6ae09c93&hm=9841784b079ca2d44b7cf945a56ef1a7da0e5557cd4baae0e991aa3b5d77c0f1&" alt="対モンスター用レーザー">
             </span>
             対モンスター用レーザー
           </div>
@@ -421,7 +457,7 @@
         <div class="stat-item">
           <div class="stat-label">
             <span class="stat-icon">
-              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620699786674276/IMG_3784.png?ex=6ae1ee14&is=6ae09c94&hm=952dadc14f2ab8aa5f550ee208c8bdba409b31a8bfebfba017dfd6edb53cd6bd&" alt="定方向発破" style="width: 60px; height: 60px; object-fit: contain;">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620699786674276/IMG_3784.png?ex=6ae1ee14&is=6ae09c94&hm=952dadc14f2ab8aa5f550ee208c8bdba409b31a8bfebfba017dfd6edb53cd6bd&" alt="定方向発破">
             </span>
             定方向発破
           </div>
@@ -436,7 +472,7 @@
         <div class="stat-item">
           <div class="stat-label">
             <span class="stat-icon">
-              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620699379957760/IMG_3783.png?ex=6ae1ee13&is=6ae09c93&hm=e86d37167e0a756165d9c11fa3db8af47c0037f6d37b30bc5f5e4711a9039b06&" alt="対モンスター用ブリック" style="width: 60px; height: 60px; object-fit: contain;">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620699379957760/IMG_3783.png?ex=6ae1ee13&is=6ae09c93&hm=e86d37167e0a756165d9c11fa3db8af47c0037f6d37b30bc5f5e4711a9039b06&" alt="対モンスター用ブリック">
             </span>
             対モンスター用ブリック
           </div>
@@ -451,7 +487,7 @@
         <div class="stat-item">
           <div class="stat-label">
             <span class="stat-icon">
-              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620698549362799/IMG_3781.png?ex=6ae1ee13&is=6ae09c93&hm=ed3296980d0c443fadc03845e2184de03096a2e67580272e58a0408c9fdf29bd&" alt="軌道レールキャノン" style="width: 60px; height: 60px; object-fit: contain;">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620698549362799/IMG_3781.png?ex=6ae1ee13&is=6ae09c93&hm=ed3296980d0c443fadc03845e2184de03096a2e67580272e58a0408c9fdf29bd&" alt="軌道レールキャノン">
             </span>
             軌道レールキャノン
           </div>
@@ -466,7 +502,7 @@
         <div class="stat-item">
           <div class="stat-label">
             <span class="stat-icon">
-              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564631184552493126/IMG_3790.png?ex=6ae1f7d7&is=6ae0a657&hm=9c84ccba45f1a7a2ece6f7d2e3fdd01750b2c445e00b1f9836c92dabe8817e79&" alt="その他" style="width: 60px; height: 60px; object-fit: contain;">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564631184552493126/IMG_3790.png?ex=6ae1f7d7&is=6ae0a657&hm=9c84ccba45f1a7a2ece6f7d2e3fdd01750b2c445e00b1f9836c92dabe8817e79&" alt="その他">
             </span>
             その他効果カード
           </div>
@@ -487,7 +523,7 @@
 
         <div class="relic-card" id="relic-spray" onclick="toggleRelic('spray')">
           <div class="relic-icon">
-            <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623032855822356/IMG_3787.png?ex=6ae1f040&is=6ae09ec0&hm=bad840179acb6f543ed5ee862e50ccb36a4e6e8d9721127a7b2da570c2702776&" alt="アイコン名" style="width: 60px; height: 60px; object-fit: contain;">
+            <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623032855822356/IMG_3787.png?ex=6ae1f040&is=6ae09ec0&hm=bad840179acb6f543ed5ee862e50ccb36a4e6e8d9721127a7b2da570c2702776&" alt="スプレー缶">
           </div>
           <div class="relic-info">
             <div class="relic-name">チップ1: スプレー缶</div>
@@ -497,7 +533,7 @@
 
         <div class="relic-card" id="relic-arrow" onclick="toggleRelic('arrow')">
           <div class="relic-icon">
-            <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623033593897011/IMG_3789.png?ex=6ae1f040&is=6ae09ec0&hm=adb1f3082b1603a4e0d5cbc8af5400bd920474958244db86a733b58f68fadcf8&" alt="アイコン名" style="width: 60px; height: 60px; object-fit: contain;">
+            <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623033593897011/IMG_3789.png?ex=6ae1f040&is=6ae09ec0&hm=adb1f3082b1603a4e0d5cbc8af5400bd920474958244db86a733b58f68fadcf8&" alt="魔法の矢袋">
           </div>
           <div class="relic-info">
             <div class="relic-name">チップ2: 魔法の矢袋</div>
@@ -507,7 +543,7 @@
 
         <div class="relic-card" id="relic-bag" onclick="toggleRelic('bag')">
           <div class="relic-icon">
-            <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623032129953984/IMG_3785.png?ex=6ae1f040&is=6ae09ec0&hm=91b713a71d1dc9dd816dcc1331cd5eba48e39995a972435dcc7426a6aab842df&" alt="アイコン名" style="width: 60px; height: 60px; object-fit: contain;">
+            <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623032129953984/IMG_3785.png?ex=6ae1f040&is=6ae09ec0&hm=91b713a71d1dc9dd816dcc1331cd5eba48e39995a972435dcc7426a6aab842df&" alt="ビッグバッグ">
           </div>
           <div class="relic-info">
             <div class="relic-name">チップ3: ビッグバッグ</div>
@@ -517,7 +553,7 @@
 
         <div class="relic-card" id="relic-tome" onclick="toggleRelic('tome')">
           <div class="relic-icon">
-            <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623032549507142/IMG_3786.png?ex=6ae1f040&is=6ae09ec0&hm=acdda176356531e4400bfe3ddb84361d542d60e131bfeea1fd9fdb27c07afbd4&" alt="アイコン名" style="width: 60px; height: 60px; object-fit: contain;">
+            <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623032549507142/IMG_3786.png?ex=6ae1f040&is=6ae09ec0&hm=acdda176356531e4400bfe3ddb84361d542d60e131bfeea1fd9fdb27c07afbd4&" alt="マジックトーム">
           </div>
           <div class="relic-info">
             <div class="relic-name">チップ4: マジックトーム</div>
@@ -527,7 +563,7 @@
 
         <div class="relic-card" id="relic-shuriken" onclick="toggleRelic('shuriken')">
           <div class="relic-icon">
-            <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623033203953755/IMG_3788.png?ex=6ae1f040&is=6ae09ec0&hm=af367e2b37c2d1d62b3fafcea33b4e3cd661bf7f62ea2b31e3fc007161691ec7&" alt="アイコン名" style="width: 60px; height: 60px; object-fit: contain;">
+            <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623033203953755/IMG_3788.png?ex=6ae1f040&is=6ae09ec0&hm=af367e2b37c2d1d62b3fafcea33b4e3cd661bf7f62ea2b31e3fc007161691ec7&" alt="手裏剣">
           </div>
           <div class="relic-info">
             <div class="relic-name">チップ5: 手裏剣</div>
@@ -554,7 +590,7 @@
       </div>
 
       <div class="sequence-container">
-        <div style="font-size:0.8rem; font-weight:700; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-size:0.8rem; font-weight:700; color:var(--text-muted); display:flex; justify-space-between; align-items:center;">
           <span>最適使用手順</span>
           <span id="res-cardCount" style="font-size:0.75rem;">使用枚数: 0</span>
         </div>

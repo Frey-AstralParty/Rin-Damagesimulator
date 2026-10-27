@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>リン用ダメージシミュレーター</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --accent-color: #3b82f6;
+      --accent-hover: #2563eb;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --active-gold: #f59e0b;
+      --active-gold-glow: rgba(245, 158, 11, 0.25);
+      --danger: #ef4444;
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 8px 16px;
+      background-color: #0b1120;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 48px;
+    }
+
+    header h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-reset {
+      background: #334155;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .btn-reset:hover {
+      background: #475569;
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 500px 500px 500px;
+      gap: 12px;
+      padding: 12px;
+      height: calc(100vh - 48px);
+    }
+
+    .panel {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .controls-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0f172a;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+    }
+
+    .stat-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1rem;
+      color: #cbd5e1;
+    }
+
+    .stat-icon, .relic-icon {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1e293b;
+      border-radius: 6px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .stat-icon img, .relic-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .counter-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-counter {
+      width: 60px;
+      height: 60px;
+      background: var(--card-border);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      transition: background 0.15s;
+    }
+    .btn-counter:hover {
+      background: var(--accent-color);
+    }
+    .counter-val {
+      width: 24px;
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .relics-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+    }
+
+    .relic-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      background: #0f172a;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .relic-card.active {
+      border-color: var(--active-gold);
+      background: #1e1b18;
+      box-shadow: 0 0 10px var(--active-gold-glow);
+    }
+
+    .relic-card .relic-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .relic-card .relic-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+
+    .relic-card.active .relic-name {
+      color: var(--active-gold);
+    }
+
+    .relic-card .relic-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.2;
+    }
+
+    .relic-toggle {
+      margin-left: auto;
+      width: 36px;
+      height: 20px;
+      background: #334155;
+      border-radius: 10px;
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .relic-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .relic-card.active .relic-toggle {
+      background: var(--active-gold);
+    }
+    .relic-card.active .relic-toggle::after {
+      transform: translateX(16px);
+    }
+
+    .result-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .metric-card {
+      background: #0f172a;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      text-align: center;
+    }
+
+    .metric-title {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--accent-color);
+    }
+
+    .sequence-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    .sequence-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-right: 4px;
+    }
+
+    .seq-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #0f172a;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border-left: 3px solid var(--accent-color);
+      font-size: 0.82rem;
+    }
+
+    .seq-num {
+      font-weight: 700;
+      color: var(--text-muted);
+      width: 20px;
+    }
+
+    .seq-card-name {
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .seq-details {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .seq-dmg {
+      font-weight: 800;
+      color: var(--success);
+    }
+
+    .badge-free {
+      background: #8b5cf6;
+      color: #fff;
+      font-size: 0.65rem;
+      padding: 1px 4px;
+      border-radius: 3px;
+      margin-left: 4px;
+    }
+
+    svg.icon-svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>
+      <svg class="icon-svg" viewBox="0 0 24 24" style="color:var(--accent-color)"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+      リン用ダメージシミュレーター
+    </h1>
+    <button class="btn-reset" onclick="resetAll()">リセット</button>
+  </header>
+
+  <main>
+    <!-- 左パネル: ステータス調整 -->
+    <section class="panel">
+      <div class="panel-title">初期ステータス</div>
+      <div class="controls-grid">
+
+        <!-- マーク数 -->
+        <div class="stat-item">
+          <div class="stat-label">
+            <span class="stat-icon">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620698280788069/IMG_3780.png?ex=6ae1ee13&is=6ae09c93&hm=3d683532472aebbd9cabd26fdca4c64c3829b243adfbfd69fdc77748b889e457&" alt="マーク" style="width: 60px; height: 60px; object-fit: contain;">
+            </span>
+            マーク数
+          </div>
+          <div class="counter-ctrl">
+            <button class="btn-counter" onclick="changeVal('initMarks', -1)">-</button>
+            <span class="counter-val" id="val-initMarks">0</span>
+            <button class="btn-counter" onclick="changeVal('initMarks', 1)">+</button>
+          </div>
+        </div>
+
+        <!-- ライフブックダメージ -->
+        <div class="stat-item">
+          <div class="stat-label">
+            <span class="stat-icon" title="ライフブックダメージ">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620697945509929/IMG_3779.png?ex=6ae1ee13&is=6ae09c93&hm=f66c81ef6aaac010cf24705f4a9d3f7645ce97b6179316bc21e482fdb42dfa00&" alt="ライフブック" style="width: 60px; height: 60px; object-fit: contain;">
+            </span>
+            ライフブックダメージ
+          </div>
+          <div class="counter-ctrl">
+            <button class="btn-counter" onclick="changeVal('lbInitDmg', -1)">-</button>
+            <span class="counter-val" id="val-lbInitDmg">2</span>
+            <button class="btn-counter" onclick="changeVal('lbInitDmg', 1)">+</button>
+          </div>
+        </div>
+
+        <!-- ライフブック枚数 -->
+        <div class="stat-item">
+          <div class="stat-label">
+            <span class="stat-icon">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620697945509929/IMG_3779.png?ex=6ae1ee13&is=6ae09c93&hm=f66c81ef6aaac010cf24705f4a9d3f7645ce97b6179316bc21e482fdb42dfa00&" alt="ライフブック" style="width: 60px; height: 60px; object-fit: contain;">
+            </span>
+            ライフブック枚数
+          </div>
+          <div class="counter-ctrl">
+            <button class="btn-counter" onclick="changeVal('cardLB', -1)">-</button>
+            <span class="counter-val" id="val-cardLB">0</span>
+            <button class="btn-counter" onclick="changeVal('cardLB', 1)">+</button>
+          </div>
+        </div>
+
+        <!-- 対モンスター用レーザー -->
+        <div class="stat-item">
+          <div class="stat-label">
+            <span class="stat-icon">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620698981240923/IMG_3782.png?ex=6ae1ee13&is=6ae09c93&hm=9841784b079ca2d44b7cf945a56ef1a7da0e5557cd4baae0e991aa3b5d77c0f1&" alt="対モンスター用レーザー" style="width: 60px; height: 60px; object-fit: contain;">
+            </span>
+            対モンスター用レーザー
+          </div>
+          <div class="counter-ctrl">
+            <button class="btn-counter" onclick="changeVal('cardD3', -1)">-</button>
+            <span class="counter-val" id="val-cardD3">0</span>
+            <button class="btn-counter" onclick="changeVal('cardD3', 1)">+</button>
+          </div>
+        </div>
+
+        <!-- 定方向発破 -->
+        <div class="stat-item">
+          <div class="stat-label">
+            <span class="stat-icon">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620699786674276/IMG_3784.png?ex=6ae1ee14&is=6ae09c94&hm=952dadc14f2ab8aa5f550ee208c8bdba409b31a8bfebfba017dfd6edb53cd6bd&" alt="定方向発破" style="width: 60px; height: 60px; object-fit: contain;">
+            </span>
+            定方向発破
+          </div>
+          <div class="counter-ctrl">
+            <button class="btn-counter" onclick="changeVal('cardD4', -1)">-</button>
+            <span class="counter-val" id="val-cardD4">0</span>
+            <button class="btn-counter" onclick="changeVal('cardD4', 1)">+</button>
+          </div>
+        </div>
+
+        <!-- 対モンスター用ブリック -->
+        <div class="stat-item">
+          <div class="stat-label">
+            <span class="stat-icon">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620699379957760/IMG_3783.png?ex=6ae1ee13&is=6ae09c93&hm=e86d37167e0a756165d9c11fa3db8af47c0037f6d37b30bc5f5e4711a9039b06&" alt="対モンスター用ブリック" style="width: 60px; height: 60px; object-fit: contain;">
+            </span>
+            対モンスター用ブリック
+          </div>
+          <div class="counter-ctrl">
+            <button class="btn-counter" onclick="changeVal('cardD5', -1)">-</button>
+            <span class="counter-val" id="val-cardD5">0</span>
+            <button class="btn-counter" onclick="changeVal('cardD5', 1)">+</button>
+          </div>
+        </div>
+
+        <!-- 軌道レールキャノン -->
+        <div class="stat-item">
+          <div class="stat-label">
+            <span class="stat-icon">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564620698549362799/IMG_3781.png?ex=6ae1ee13&is=6ae09c93&hm=ed3296980d0c443fadc03845e2184de03096a2e67580272e58a0408c9fdf29bd&" alt="軌道レールキャノン" style="width: 60px; height: 60px; object-fit: contain;">
+            </span>
+            軌道レールキャノン
+          </div>
+          <div class="counter-ctrl">
+            <button class="btn-counter" onclick="changeVal('cardD6', -1)">-</button>
+            <span class="counter-val" id="val-cardD6">0</span>
+            <button class="btn-counter" onclick="changeVal('cardD6', 1)">+</button>
+          </div>
+        </div>
+
+        <!-- その他カード -->
+        <div class="stat-item">
+          <div class="stat-label">
+            <span class="stat-icon">
+              <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564631184552493126/IMG_3790.png?ex=6ae1f7d7&is=6ae0a657&hm=9c84ccba45f1a7a2ece6f7d2e3fdd01750b2c445e00b1f9836c92dabe8817e79&" alt="その他" style="width: 60px; height: 60px; object-fit: contain;">
+            </span>
+            その他効果カード
+          </div>
+          <div class="counter-ctrl">
+            <button class="btn-counter" onclick="changeVal('cardOther', -1)">-</button>
+            <span class="counter-val" id="val-cardOther">0</span>
+            <button class="btn-counter" onclick="changeVal('cardOther', 1)">+</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 中央パネル: チップ設定 -->
+    <section class="panel">
+      <div class="panel-title">所持チップ (ON/OFF)</div>
+      <div class="relics-grid">
+
+        <div class="relic-card" id="relic-spray" onclick="toggleRelic('spray')">
+          <div class="relic-icon">
+            <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623032855822356/IMG_3787.png?ex=6ae1f040&is=6ae09ec0&hm=bad840179acb6f543ed5ee862e50ccb36a4e6e8d9721127a7b2da570c2702776&" alt="アイコン名" style="width: 60px; height: 60px; object-fit: contain;">
+          </div>
+          <div class="relic-info">
+            <div class="relic-name">チップ1: スプレー缶</div>
+          </div>
+          <div class="relic-toggle"></div>
+        </div>
+
+        <div class="relic-card" id="relic-arrow" onclick="toggleRelic('arrow')">
+          <div class="relic-icon">
+            <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623033593897011/IMG_3789.png?ex=6ae1f040&is=6ae09ec0&hm=adb1f3082b1603a4e0d5cbc8af5400bd920474958244db86a733b58f68fadcf8&" alt="アイコン名" style="width: 60px; height: 60px; object-fit: contain;">
+          </div>
+          <div class="relic-info">
+            <div class="relic-name">チップ2: 魔法の矢袋</div>
+          </div>
+          <div class="relic-toggle"></div>
+        </div>
+
+        <div class="relic-card" id="relic-bag" onclick="toggleRelic('bag')">
+          <div class="relic-icon">
+            <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623032129953984/IMG_3785.png?ex=6ae1f040&is=6ae09ec0&hm=91b713a71d1dc9dd816dcc1331cd5eba48e39995a972435dcc7426a6aab842df&" alt="アイコン名" style="width: 60px; height: 60px; object-fit: contain;">
+          </div>
+          <div class="relic-info">
+            <div class="relic-name">チップ3: ビッグバッグ</div>
+          </div>
+          <div class="relic-toggle"></div>
+        </div>
+
+        <div class="relic-card" id="relic-tome" onclick="toggleRelic('tome')">
+          <div class="relic-icon">
+            <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623032549507142/IMG_3786.png?ex=6ae1f040&is=6ae09ec0&hm=acdda176356531e4400bfe3ddb84361d542d60e131bfeea1fd9fdb27c07afbd4&" alt="アイコン名" style="width: 60px; height: 60px; object-fit: contain;">
+          </div>
+          <div class="relic-info">
+            <div class="relic-name">チップ4: マジックトーム</div>
+          </div>
+          <div class="relic-toggle"></div>
+        </div>
+
+        <div class="relic-card" id="relic-shuriken" onclick="toggleRelic('shuriken')">
+          <div class="relic-icon">
+            <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623033203953755/IMG_3788.png?ex=6ae1f040&is=6ae09ec0&hm=af367e2b37c2d1d62b3fafcea33b4e3cd661bf7f62ea2b31e3fc007161691ec7&" alt="アイコン名" style="width: 60px; height: 60px; object-fit: contain;">
+          </div>
+          <div class="relic-info">
+            <div class="relic-name">チップ5: 手裏剣</div>
+          </div>
+          <div class="relic-toggle"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 右パネル: 計算結果表示 -->
+    <section class="panel">
+      <div class="panel-title">最適解計算結果</div>
+      
+      <div class="result-summary">
+        <div class="metric-card">
+          <div class="metric-title">最大合計ダメージ</div>
+          <div class="metric-value" id="res-totalDmg">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-title">1枚平均ダメージ</div>
+          <div class="metric-value" id="res-avgDmg">0.0</div>
+        </div>
+      </div>
+
+      <div class="sequence-container">
+        <div style="font-size:0.8rem; font-weight:700; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+          <span>最適使用手順</span>
+          <span id="res-cardCount" style="font-size:0.75rem;">使用枚数: 0</span>
+        </div>
+        <div class="sequence-list" id="res-seqList">
+          <!-- 動的生成エリア -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // 状態管理
+    const state = {
+      initMarks: 0,
+      lbInitDmg: 2,
+      cardLB: 0,
+      cardD3: 0,
+      cardD4: 0,
+      cardD5: 0,
+      cardD6: 0,
+      cardOther: 0,
+      relics: {
+        spray: false,
+        arrow: false,
+        bag: false,
+        tome: false,
+        shuriken: false
+      }
+    };
+
+    function changeVal(key, delta) {
+      state[key] = Math.max(0, state[key] + delta);
+      document.getElementById(`val-${key}`).innerText = state[key];
+      calculateBestSequence();
+    }
+
+    function toggleRelic(key) {
+      state.relics[key] = !state.relics[key];
+      const el = document.getElementById(`relic-${key}`);
+      if (state.relics[key]) {
+        el.classList.add('active');
+      } else {
+        el.classList.remove('active');
+      }
+      calculateBestSequence();
+    }
+
+    function resetAll() {
+      state.initMarks = 0;
+      state.lbInitDmg = 2;
+      state.cardLB = 0;
+      state.cardD3 = 0;
+      state.cardD4 = 0;
+      state.cardD5 = 0;
+      state.cardD6 = 0;
+      state.cardOther = 0;
+
+      for (let k in state.relics) {
+        state.relics[k] = false;
+        document.getElementById(`relic-${k}`).classList.remove('active');
+      }
+
+      const keys = ['initMarks', 'lbInitDmg', 'cardLB', 'cardD3', 'cardD4', 'cardD5', 'cardD6', 'cardOther'];
+      keys.forEach(k => {
+        document.getElementById(`val-${k}`).innerText = state[k];
+      });
+
+      calculateBestSequence();
+    }
+
+    // シミュレーション計算エンジン
+    function calculateBestSequence() {
+      let maxUses = 1;
+      if (state.relics.bag) maxUses += 1;
+      if (state.relics.shuriken) maxUses += 1; // 手裏剣の初期使用数+1
+      maxUses = Math.min(9, maxUses);
+
+      const deck = [];
+      for (let i = 0; i < state.cardLB; i++) deck.push({ type: 'LB', name: 'ライフブック' });
+      for (let i = 0; i < state.cardD3; i++) deck.push({ type: 'D3', name: 'ダメージ3' });
+      for (let i = 0; i < state.cardD4; i++) deck.push({ type: 'D4', name: 'ダメージ4' });
+      for (let i = 0; i < state.cardD5; i++) deck.push({ type: 'D5', name: 'ダメージ5' });
+      for (let i = 0; i < state.cardD6; i++) deck.push({ type: 'D6', name: 'ダメージ6' });
+      for (let i = 0; i < state.cardOther; i++) deck.push({ type: 'OTHER', name: 'その他' });
+
+      let bestResult = {
+        totalDamage: 0,
+        history: []
+      };
+
+      function search(currentDeck, currentUses, currentMarks, lbBaseDmg, arrowAvailable, cardsPlayedTotal, currentHistory, totalDmg) {
+        if (currentDmgIsBetter(totalDmg, currentHistory, bestResult)) {
+          bestResult = {
+            totalDamage: totalDmg,
+            history: JSON.parse(JSON.stringify(currentHistory))
+          };
+        }
+
+        if (currentUses <= 0 || currentDeck.length === 0) return;
+
+        const triedTypes = new Set();
+
+        for (let i = 0; i < currentDeck.length; i++) {
+          const card = currentDeck[i];
+          if (triedTypes.has(card.type)) continue;
+          triedTypes.add(card.type);
+
+          const nextDeck = [...currentDeck];
+          nextDeck.splice(i, 1);
+
+          const isDamageCard = ['D3', 'D4', 'D5', 'D6', 'LB'].includes(card.type);
+          let usesCost = 1;
+          let newArrowAvail = arrowAvailable;
+          let arrowTriggered = false;
+          let nextMarks = currentMarks;
+          let nextLbBase = lbBaseDmg;
+          let nextUses = currentUses;
+
+          const playOrderNumber = cardsPlayedTotal + 1;
+          let tomeTriggered = false;
+          if (state.relics.tome && playOrderNumber % 3 === 0) {
+            tomeTriggered = true;
+          }
+
+          // 1. 魔法の矢袋（優先処理）
+          if (isDamageCard && state.relics.arrow && arrowAvailable && currentMarks >= 1) {
+            arrowTriggered = true;
+            newArrowAvail = false;
+            nextMarks += 1; // ダメージ処理前マーク+1
+          }
+
+          // ダメージ計算
+          let stepDmg = 0;
+          if (isDamageCard) {
+            let baseDmg = 0;
+            if (card.type === 'LB') baseDmg = lbBaseDmg;
+            else if (card.type === 'D3') baseDmg = 3;
+            else if (card.type === 'D4') baseDmg = 4;
+            else if (card.type === 'D5') baseDmg = 5;
+            else if (card.type === 'D6') baseDmg = 6;
+
+            stepDmg = baseDmg;
+            if (nextMarks >= 1) stepDmg += 1;
+            if (state.relics.shuriken) stepDmg += nextMarks;
+          }
+
+          // 2. ダメージ後のマーク付与処理
+          if (isDamageCard) {
+            if (card.type === 'LB') {
+              nextMarks += 1;
+            }
+            if (state.relics.spray) {
+              nextMarks += 1;
+            }
+          }
+
+          // 3. LB効果
+          if (card.type === 'LB') {
+            if (currentMarks >= 3) {
+              nextUses = Math.min(9, nextUses + 1);
+            }
+            nextLbBase += 1;
+          }
+
+          // 消費コストの判定
+          let consumeCard = true;
+          if (arrowTriggered) consumeCard = false;
+          else if (tomeTriggered) consumeCard = false;
+
+          if (consumeCard) {
+            nextUses -= 1;
+          }
+
+          const stepInfo = {
+            cardName: card.name,
+            damage: stepDmg,
+            marksAfter: nextMarks,
+            usesLeft: nextUses,
+            isFree: !consumeCard,
+            arrowUsed: arrowTriggered,
+            tomeUsed: tomeTriggered
+          };
+
+          const remainingDeck = consumeCard ? nextDeck : currentDeck;
+
+          search(
+            remainingDeck,
+            nextUses,
+            nextMarks,
+            nextLbBase,
+            newArrowAvail,
+            cardsPlayedTotal + 1,
+            [...currentHistory, stepInfo],
+            totalDmg + stepDmg
+          );
+        }
+      }
+
+      search(deck, maxUses, state.initMarks, state.lbInitDmg, true, 0, [], 0);
+      renderResult(bestResult);
+    }
+
+    function currentDmgIsBetter(totalDmg, history, bestResult) {
+      if (totalDmg > bestResult.totalDamage) return true;
+      if (totalDmg === bestResult.totalDamage) {
+        if (history.length < bestResult.history.length) return true;
+      }
+      return false;
+    }
+
+    function renderResult(result) {
+      document.getElementById('res-totalDmg').innerText = result.totalDamage;
+      
+      const count = result.history.length;
+      document.getElementById('res-cardCount').innerText = `使用枚数: ${count}枚`;
+      
+      const avg = count > 0 ? (result.totalDamage / count).toFixed(1) : '0.0';
+      document.getElementById('res-avgDmg').innerText = avg;
+
+      const listEl = document.getElementById('res-seqList');
+      listEl.innerHTML = '';
+
+      if (result.history.length === 0) {
+        listEl.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px; font-size:0.85rem;">カードが使用されていません</div>';
+        return;
+      }
+
+      result.history.forEach((step, idx) => {
+        const item = document.createElement('div');
+        item.className = 'seq-step';
+        
+        let freeBadge = '';
+        if (step.arrowUsed) freeBadge += '<span class="badge-free">矢袋</span>';
+        if (step.tomeUsed) freeBadge += '<span class="badge-free">トーム</span>';
+
+        item.innerHTML = `
+          <span class="seq-num">${idx + 1}.</span>
+          <span class="seq-cardName">${step.cardName}${freeBadge}</span>
+          <span class="seq-details">付与マーク: ${step.marksAfter}</span>
+          <span class="seq-dmg">+${step.damage}</span>
+        `;
+        listEl.appendChild(item);
+      });
+    }
+
+    // 初回計算
+    calculateBestSequence();
+  </script>
+</body>
+</html>

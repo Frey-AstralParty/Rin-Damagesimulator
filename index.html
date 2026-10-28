@@ -180,11 +180,34 @@
     .btn-counter:active {
       transform: scale(0.96);
     }
+
     .counter-val {
-      width: 28px;
+      width: 36px;
       text-align: center;
       font-size: 1.15rem;
       font-weight: 700;
+    }
+
+    .counter-input {
+      width: 60px;
+      height: 42px;
+      background: #0f172a;
+      color: var(--text-main);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      text-align: center;
+      font-size: 1.15rem;
+      font-weight: 700;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .counter-input:focus {
+      border-color: var(--accent-color);
+    }
+    .counter-input::-webkit-inner-spin-button,
+    .counter-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
 
     .relics-grid {
@@ -392,6 +415,21 @@
       <div class="panel-title">初期ステータス</div>
       <div class="controls-grid">
 
+        <!-- 敵体力 -->
+        <div class="stat-item">
+          <div class="stat-label">
+            <span class="stat-icon" title="敵体力">
+              <svg class="icon-svg" style="color:#ef4444" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            </span>
+            敵体力
+          </div>
+          <div class="counter-ctrl">
+            <button class="btn-counter" onclick="changeVal('enemyHp', -1)">-</button>
+            <input type="number" class="counter-input" id="input-enemyHp" value="0" min="0" oninput="updateInputVal('enemyHp', this.value)">
+            <button class="btn-counter" onclick="changeVal('enemyHp', 1)">+</button>
+          </div>
+        </div>
+
         <!-- マーク数 -->
         <div class="stat-item">
           <div class="stat-label">
@@ -515,10 +553,10 @@
         <!-- マジックトーム開始位置 -->
         <div class="stat-item">
           <div class="stat-label">
-            <span class="stat-icon" title="マジックトームの値">
+            <span class="stat-icon" title="マジックトーム開始値(0,1,2)">
               <img src="https://cdn.discordapp.com/attachments/1556260613565583381/1564623032549507142/IMG_3786.png?ex=6ae1f040&is=6ae09ec0&hm=acdda176356531e4400bfe3ddb84361d542d60e131bfeea1fd9fdb27c07afbd4&" alt="マジックトーム開始">
             </span>
-            マジックトームの値
+            マジックトーム開始値
           </div>
           <div class="counter-ctrl">
             <button class="btn-counter" onclick="changeVal('tomeStart', -1)">-</button>
@@ -598,8 +636,8 @@
           <div class="metric-value" id="res-totalDmg">0</div>
         </div>
         <div class="metric-card">
-          <div class="metric-title">1枚平均ダメージ</div>
-          <div class="metric-value" id="res-avgDmg">0.0</div>
+          <div class="metric-title">残り体力</div>
+          <div class="metric-value" id="res-remainingHp">30</div>
         </div>
       </div>
 
@@ -609,6 +647,7 @@
           <span id="res-cardCount" style="font-size:0.75rem;">使用枚数: 0</span>
         </div>
         <div class="sequence-list" id="res-seqList">
+          <!-- 動的生成エリア -->
         </div>
       </div>
     </section>
@@ -617,6 +656,7 @@
   <script>
     // 状態管理
     const state = {
+      enemyHp: 0,
       initMarks: 0,
       lbInitDmg: 2,
       cardLB: 0,
@@ -643,8 +683,19 @@
         document.getElementById(`val-${key}`).innerText = state.tomeStart;
       } else {
         state[key] = Math.max(0, state[key] + delta);
-        document.getElementById(`val-${key}`).innerText = state[key];
+        if (key === 'enemyHp') {
+          document.getElementById('input-enemyHp').value = state[key];
+        } else {
+          document.getElementById(`val-${key}`).innerText = state[key];
+        }
       }
+      calculateBestSequence();
+    }
+
+    function updateInputVal(key, val) {
+      let num = parseInt(val, 10);
+      if (isNaN(num) || num < 0) num = 0;
+      state[key] = num;
       calculateBestSequence();
     }
 
@@ -660,6 +711,7 @@
     }
 
     function resetAll() {
+      state.enemyHp = 0;
       state.initMarks = 0;
       state.lbInitDmg = 2;
       state.cardLB = 0;
@@ -669,6 +721,8 @@
       state.cardD6 = 0;
       state.cardOther = 0;
       state.tomeStart = 0;
+
+      document.getElementById('input-enemyHp').value = state.enemyHp;
 
       for (let k in state.relics) {
         state.relics[k] = false;
@@ -683,7 +737,6 @@
       calculateBestSequence();
     }
 
-    // シミュレーション計算エンジン
     function calculateBestSequence() {
       let maxUses = 1;
       if (state.relics.bag) maxUses += 1;
@@ -711,7 +764,7 @@
           };
         }
 
-        if (currentUses <= 0 || currentDeck.length === 0) return;
+        if (currentUses <= 0 || currentDeck.length === 0 || cardsPlayedTotal >= 9) return;
 
         const triedTypes = new Set();
 
@@ -724,7 +777,6 @@
           nextDeck.splice(i, 1);
 
           const isDamageCard = ['D3', 'D4', 'D5', 'D6', 'LB'].includes(card.type);
-          let usesCost = 1;
           let newArrowAvail = arrowAvailable;
           let arrowTriggered = false;
           let nextMarks = currentMarks;
@@ -742,7 +794,7 @@
           if (isDamageCard && state.relics.arrow && arrowAvailable && currentMarks >= 1) {
             arrowTriggered = true;
             newArrowAvail = false;
-            nextMarks += 1; // ダメージ処理前マーク+1
+            nextMarks += 1;
           }
 
           let stepDmg = 0;
@@ -769,17 +821,24 @@
           }
 
           if (card.type === 'LB') {
-            if (currentMarks >= 3) {
+            if (nextMarks >= 3) {
               nextUses = Math.min(9, nextUses + 1);
             }
             nextLbBase += 1;
           }
 
-          let consumeCard = true;
-          if (arrowTriggered) consumeCard = false;
-          else if (tomeTriggered) consumeCard = false;
+          let consumeCardFromDeck = true;
+          let consumeUses = true;
 
-          if (consumeCard) {
+          if (arrowTriggered) {
+            consumeCardFromDeck = false; 
+            consumeUses = true;
+          } else if (tomeTriggered) {
+            consumeCardFromDeck = false;
+            consumeUses = true;
+          }
+
+          if (consumeUses) {
             nextUses -= 1;
           }
 
@@ -788,12 +847,11 @@
             damage: stepDmg,
             marksAfter: nextMarks,
             usesLeft: nextUses,
-            isFree: !consumeCard,
             arrowUsed: arrowTriggered,
             tomeUsed: tomeTriggered
           };
 
-          const remainingDeck = consumeCard ? nextDeck : currentDeck;
+          const remainingDeck = consumeCardFromDeck ? nextDeck : currentDeck;
 
           search(
             remainingDeck,
@@ -823,11 +881,11 @@
     function renderResult(result) {
       document.getElementById('res-totalDmg').innerText = result.totalDamage;
       
+      const remainingHp = Math.max(0, state.enemyHp - result.totalDamage);
+      document.getElementById('res-remainingHp').innerText = remainingHp;
+      
       const count = result.history.length;
       document.getElementById('res-cardCount').innerText = `使用枚数: ${count}枚`;
-      
-      const avg = count > 0 ? (result.totalDamage / count).toFixed(1) : '0.0';
-      document.getElementById('res-avgDmg').innerText = avg;
 
       const listEl = document.getElementById('res-seqList');
       listEl.innerHTML = '';

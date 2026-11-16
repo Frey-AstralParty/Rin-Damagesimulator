@@ -623,6 +623,16 @@
           <div class="relic-toggle"></div>
         </div>
 
+        <div class="relic-card" id="relic-bookmark" onclick="toggleRelic('bookmark')">
+          <div class="relic-icon">
+            <img src="image\IMG_3791.png" alt="しおり">
+          </div>
+          <div class="relic-info">
+            <div class="relic-name">チップ6: しおり</div>
+          </div>
+          <div class="relic-toggle"></div>
+        </div>
+
       </div>
     </section>
 
@@ -637,12 +647,12 @@
         </div>
         <div class="metric-card">
           <div class="metric-title">残り体力</div>
-          <div class="metric-value" id="res-remainingHp">30</div>
+          <div class="metric-value" id="res-remainingHp">0</div>
         </div>
       </div>
 
       <div class="sequence-container">
-        <div style="font-size:0.8rem; font-weight:700; color:var(--text-muted); display:flex; justify-space-between; align-items:center;">
+        <div style="font-size:0.8rem; font-weight:700; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
           <span>最適使用手順</span>
           <span id="res-cardCount" style="font-size:0.75rem;">使用枚数: 0</span>
         </div>
@@ -671,7 +681,8 @@
         arrow: false,
         bag: false,
         tome: false,
-        shuriken: false
+        shuriken: false,
+        bookmark: false
       }
     };
 
@@ -791,12 +802,17 @@
             }
           }
 
+          // 1. 魔法の矢袋（ダメージ処理前のマーク増加）
           if (isDamageCard && state.relics.arrow && arrowAvailable && currentMarks >= 1) {
             arrowTriggered = true;
             newArrowAvail = false;
             nextMarks += 1;
           }
 
+          // ダメージ処理前のマーク数を保持（LBの使用数+1判定に使用）
+          const marksBeforeDamage = nextMarks;
+
+          // 2. ダメージ計算
           let stepDmg = 0;
           if (isDamageCard) {
             let baseDmg = 0;
@@ -807,10 +823,20 @@
             else if (card.type === 'D6') baseDmg = 6;
 
             stepDmg = baseDmg;
-            if (nextMarks >= 1) stepDmg += 1;
-            if (state.relics.shuriken) stepDmg += nextMarks;
+            if (marksBeforeDamage >= 1) stepDmg += 1;
+            if (state.relics.shuriken) stepDmg += marksBeforeDamage;
+            if (state.relics.bookmark) stepDmg += 2; // しおり：ダメージカード+2
           }
 
+          // 3. ライフブック効果（ダメージ処理前のマーク数が3以上の場合に使用数+1）
+          if (card.type === 'LB') {
+            if (marksBeforeDamage >= 3) {
+              nextUses = Math.min(9, nextUses + 1);
+            }
+            nextLbBase += 1;
+          }
+
+          // 4. ダメージ後のマーク付与処理
           if (isDamageCard) {
             if (card.type === 'LB') {
               nextMarks += 1;
@@ -818,13 +844,6 @@
             if (state.relics.spray) {
               nextMarks += 1;
             }
-          }
-
-          if (card.type === 'LB') {
-            if (nextMarks >= 3) {
-              nextUses = Math.min(9, nextUses + 1);
-            }
-            nextLbBase += 1;
           }
 
           let consumeCardFromDeck = true;
